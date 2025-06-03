@@ -1,5 +1,6 @@
 import streamlit as st
 from PIL import Image
+from PIL import ImageDraw
 import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
@@ -64,6 +65,26 @@ def predict_gaze(img: Image.Image):
         confidence = probs[0][class_idx].item()
     return CLASSES[class_idx], confidence
 
+def draw_arrow(img: Image.Image, direction: str) -> Image.Image:
+    draw = ImageDraw.Draw(img)
+    w, h = img.size
+    cx, cy = w // 2, h // 2  # Titik tengah
+
+    length = 60  # Panjang panah
+
+    if direction == 'left_look':
+        end = (cx - length, cy)
+    elif direction == 'right_look':
+        end = (cx + length, cy)
+    elif direction == 'forward_look':
+        end = (cx, cy + length)
+    else:
+        return img  # Kalau closed, tidak digambar
+
+    draw.line((cx, cy, *end), fill='red', width=5)
+    draw.ellipse((cx-5, cy-5, cx+5, cy+5), fill='blue')  # Titik pusat
+    return img
+
 # UI Streamlit
 st.title("🎯 Deteksi Arah Pandangan Mahasiswa (PyTorch)")
 
@@ -76,4 +97,8 @@ if uploaded_file is not None:
     with st.spinner("🔍 Mendeteksi arah pandangan..."):
         label, confidence = predict_gaze(img)
 
+    # Tambahkan panah arah
+    img_arrow = draw_arrow(img.copy(), label)
+
+    st.image(img_arrow, caption='📍 Arah pandangan terdeteksi', use_column_width=True)
     st.markdown(f"### ✅ Prediksi: **{label.replace('_', ' ').title()}** ({confidence*100:.2f}% yakin)")
