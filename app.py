@@ -4,10 +4,14 @@ import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
 import numpy as np
+import os
+import gdown
 
+# Kelas prediksi
 CLASSES = ['closed_look', 'forward_look', 'left_look', 'right_look']
 device = torch.device("cpu")
 
+# Define arsitektur CNN
 class GazeCNN(nn.Module):
     def __init__(self):
         super(GazeCNN, self).__init__()
@@ -27,21 +31,29 @@ class GazeCNN(nn.Module):
         x = self.fc(x)
         return x
 
+# Fungsi load model dengan auto-download jika tidak ada
 @st.cache_resource
 def load_model():
+    model_path = 'model/direction_model.pt'
+    if not os.path.exists(model_path):
+        os.makedirs('model', exist_ok=True)
+        gdown.download('https://drive.google.com/uc?id=1RmU1ydOj6K5F1uM-LTblue3gVcqsx59o', model_path, quiet=False)
+
     model = GazeCNN().to(device)
-    model.load_state_dict(torch.load('model/direction_model.pt', map_location=device))
+    model.load_state_dict(torch.load(model_path, map_location=device))
     model.eval()
     return model
 
 model = load_model()
 
+# Transformasi gambar
 transform = transforms.Compose([
     transforms.Resize((150, 150)),
     transforms.ToTensor(),
     transforms.Normalize([0.5], [0.5])
 ])
 
+# Fungsi prediksi
 def predict_gaze(img: Image.Image):
     img = img.convert('RGB')
     img_tensor = transform(img).unsqueeze(0).to(device)
@@ -52,7 +64,7 @@ def predict_gaze(img: Image.Image):
         confidence = probs[0][class_idx].item()
     return CLASSES[class_idx], confidence
 
-# Streamlit UI
+# UI Streamlit
 st.title("🎯 Deteksi Arah Pandangan Mahasiswa (PyTorch)")
 
 uploaded_file = st.file_uploader("📷 Upload gambar wajah mahasiswa", type=["jpg", "jpeg", "png"])
