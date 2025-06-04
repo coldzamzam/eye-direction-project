@@ -27,7 +27,8 @@ If you want to train the model too **(2nd Method)**
    python train_model.py
    ```
    You can change the epochs cuz its way tooo loonggg to wait even its just 10 epochs.
-6. Follow step 2 and 3 in the 1st method.
+   Ah, GitHub won't accept if we push files over 100 MB, so just upload your direction_model.pt and replace the google drive link ID in app.py with yours. (If your model is under 100 MB, just ignore it)
+7. Follow step 2 and 3 in the 1st method.
 
 *Notes:
 For my friends, just clone this and chat me.
